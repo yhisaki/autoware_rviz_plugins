@@ -9,6 +9,13 @@
     <message_type>autoware_perception_msgs/msg/PredictedObjects</message_type>
   </class>
 
+  <class name="autoware_perception_rviz_plugin/PredictedObjectsV2" type="autoware_perception_rviz_plugin::objects::PredictedObjectsDisplayV2" base_class_type="rviz_common::Display">
+    <description>
+      Convert a PredictedObjects to markers and display them (V2 implementation).
+    </description>
+    <message_type>autoware_perception_msgs/msg/PredictedObjects</message_type>
+  </class>
+
   <class name="autoware_perception_rviz_plugin/TrackedObjects" type="autoware::rviz_plugins::object_detection::TrackedObjectsDisplay" base_class_type="rviz_common::Display">
     <description>
       Convert a TrackedObjects to markers and display them.

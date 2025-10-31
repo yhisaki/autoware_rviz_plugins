@@ -11,6 +11,7 @@ set(OD_PLUGIN_LIB_SRC
   src/object_detection/tracked_objects_display.cpp
   src/object_detection/predicted_objects_display.cpp
   src/traffic_light/traffic_light_display.cpp
+  src/objects/predicted_objects_display_v2.cpp
 )
 
 set(OD_PLUGIN_LIB_HEADERS
@@ -21,6 +22,7 @@ set(OD_PLUGIN_LIB_HEADERS_TO_WRAP
   include/autoware_perception_rviz_plugin/object_detection/tracked_objects_display.hpp
   include/autoware_perception_rviz_plugin/object_detection/predicted_objects_display.hpp
   include/autoware_perception_rviz_plugin/traffic_light/traffic_light_display.hpp
+  include/autoware_perception_rviz_plugin/objects/predicted_objects_display_v2.hpp
 )
 
 set(COMMON_HEADERS

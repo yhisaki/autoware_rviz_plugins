@@ -53,7 +53,7 @@ public:
       std::unique_lock<std::mutex> lock(queue_mutex);
       should_terminate = true;
     }
-    condition.notify_all();
+    condition_.notify_all();
     for (std::thread & active_thread : threads) {
       active_thread.join();
     }
@@ -69,7 +69,7 @@ private:
       std::unique_lock<std::mutex> lock(queue_mutex);
       jobs.push(std::move(job));
     }
-    condition.notify_one();
+    condition_.notify_one();
   }
 
   boost::uuids::uuid to_boost_uuid(const unique_identifier_msgs::msg::UUID & uuid_msg)
@@ -141,12 +141,12 @@ private:
   std::vector<std::thread> threads;
   std::queue<std::function<void()>> jobs;
 
-  PredictedObjects::ConstSharedPtr msg;
-  bool consumed{false};
-  std::mutex mutex;
-  std::condition_variable condition;
-  std::vector<visualization_msgs::msg::Marker::SharedPtr> markers;
-  std::set<rviz_default_plugins::displays::MarkerID> existing_marker_ids;
+  PredictedObjects::ConstSharedPtr msg_;
+  bool consumed_{false};
+  std::mutex mutex_;
+  std::condition_variable condition_;
+  std::vector<visualization_msgs::msg::Marker::SharedPtr> markers_;
+  std::set<rviz_default_plugins::displays::MarkerID> existing_marker_ids_;
 };
 
 }  // namespace object_detection

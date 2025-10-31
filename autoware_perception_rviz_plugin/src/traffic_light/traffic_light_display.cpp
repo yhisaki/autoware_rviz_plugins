@@ -309,8 +309,8 @@ void TrafficLightDisplay::onEnable()
   rviz_common::Display::onEnable();
   std::lock_guard<std::mutex> lock_property(property_mutex_);
   setupRosSubscriptions();
-  for (const auto & [id, text_node] : traffic_light_text_nodes_) {
-    text_node->setVisible(show_text_property_->getBool());
+  for (const auto & [id, text_display] : traffic_light_text_displays_) {
+    text_display->setVisible(show_text_property_->getBool());
   }
   for (const auto & [id, bulb_display] : traffic_light_bulb_displays_) {
     bulb_display->getEntity()->setVisible(show_bulb_property_->getBool());
@@ -323,8 +323,8 @@ void TrafficLightDisplay::onDisable()
   std::lock_guard<std::mutex> lock_property(property_mutex_);
   lanelet_map_sub_.reset();
   traffic_light_group_array_sub_.reset();
-  for (const auto & [id, text_node] : traffic_light_text_nodes_) {
-    text_node->setVisible(false);
+  for (const auto & [id, text_display] : traffic_light_text_displays_) {
+    text_display->setVisible(false);
   }
   for (const auto & [id, bulb_display] : traffic_light_bulb_displays_) {
     bulb_display->getEntity()->setVisible(false);
@@ -341,7 +341,6 @@ void TrafficLightDisplay::reset()
 
   // Clear all display objects
   traffic_light_text_displays_.clear();
-  traffic_light_text_nodes_.clear();
   traffic_light_bulb_displays_.clear();
 
   // Reset data
@@ -357,8 +356,8 @@ void TrafficLightDisplay::reset()
 void TrafficLightDisplay::hideAllDisplays()
 {
   std::lock_guard<std::mutex> lock_property(property_mutex_);
-  for (const auto & [id, text_node] : traffic_light_text_nodes_) {
-    text_node->setVisible(false);
+  for (const auto & [id, text_display] : traffic_light_text_displays_) {
+    text_display->setVisible(false);
   }
   for (const auto & [id, bulb_display] : traffic_light_bulb_displays_) {
     bulb_display->getEntity()->setVisible(false);
@@ -382,19 +381,9 @@ void TrafficLightDisplay::updateTrafficLightText(
 {
   // Note: This method is called from update() which already holds property_mutex_
   if (traffic_light_text_displays_.find(info.id) == traffic_light_text_displays_.end()) {
-    auto text_display = std::make_unique<rviz_rendering::MovableText>(
-      state_text, "Liberation Sans", font_size_property_->getFloat());
-    text_display->setTextAlignment(
-      rviz_rendering::MovableText::H_CENTER, rviz_rendering::MovableText::V_CENTER);
-    const QColor & color = text_color_property_->getColor();
-    text_display->setColor(
-      Ogre::ColourValue(color.redF(), color.greenF(), color.blueF(), color.alphaF()));
+    auto text_display = std::make_unique<common::TextObject>(
+      scene_manager_, scene_node_, state_text, "Liberation Sans", font_size_property_->getFloat());
     traffic_light_text_displays_[info.id] = std::move(text_display);
-  }
-
-  if (traffic_light_text_nodes_.find(info.id) == traffic_light_text_nodes_.end()) {
-    traffic_light_text_nodes_[info.id] = scene_node_->createChildSceneNode();
-    traffic_light_text_nodes_[info.id]->attachObject(traffic_light_text_displays_[info.id].get());
   }
 
   std::string display_text = text_prefix_property_->getStdString() + state_text;
@@ -402,13 +391,15 @@ void TrafficLightDisplay::updateTrafficLightText(
     static_cast<float>(info.getLinestringCenter().x) + text_x_offset_property_->getFloat(),
     static_cast<float>(info.getLinestringCenter().y) + text_y_offset_property_->getFloat(),
     static_cast<float>(info.getLinestringCenter().z) + text_z_offset_property_->getFloat());
-  traffic_light_text_nodes_[info.id]->setPosition(position);
+
+  traffic_light_text_displays_[info.id]->setPosition(position);
   traffic_light_text_displays_[info.id]->setCaption(display_text);
   traffic_light_text_displays_[info.id]->setCharacterHeight(font_size_property_->getFloat());
   const QColor & color = text_color_property_->getColor();
   traffic_light_text_displays_[info.id]->setColor(
-    Ogre::ColourValue(color.redF(), color.greenF(), color.blueF(), color.alphaF()));
-  traffic_light_text_nodes_[info.id]->setVisible(show_text_property_->getBool());
+    static_cast<float>(color.redF()), static_cast<float>(color.greenF()),
+    static_cast<float>(color.blueF()), static_cast<float>(color.alphaF()));
+  traffic_light_text_displays_[info.id]->setVisible(show_text_property_->getBool());
 }
 
 void TrafficLightDisplay::updateTrafficLightBulbs(

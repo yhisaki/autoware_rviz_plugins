@@ -16,6 +16,7 @@
 #ifndef AUTOWARE_PERCEPTION_RVIZ_PLUGIN__TRAFFIC_LIGHT__TRAFFIC_LIGHT_DISPLAY_HPP_
 #define AUTOWARE_PERCEPTION_RVIZ_PLUGIN__TRAFFIC_LIGHT__TRAFFIC_LIGHT_DISPLAY_HPP_
 
+#include "autoware_perception_rviz_plugin/common/text_object.hpp"
 #include "rviz_common/properties/ros_topic_property.hpp"
 #include "rviz_rendering/objects/shape.hpp"
 
@@ -25,7 +26,6 @@
 #include <rviz_common/properties/color_property.hpp>
 #include <rviz_common/properties/float_property.hpp>
 #include <rviz_common/properties/string_property.hpp>
-#include <rviz_rendering/objects/movable_text.hpp>
 
 #include <autoware_map_msgs/msg/lanelet_map_bin.hpp>
 #include <autoware_perception_msgs/msg/traffic_light_group_array.hpp>
@@ -37,7 +37,6 @@
 #include <lanelet2_core/primitives/Lanelet.h>
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -140,9 +139,7 @@ private:  // NOLINT
   rclcpp::Time last_traffic_light_received_time_;
 
   // Text visualization
-  std::unordered_map<lanelet::Id, Ogre::SceneNode *> traffic_light_text_nodes_;
-  std::unordered_map<lanelet::Id, std::unique_ptr<rviz_rendering::MovableText>>
-    traffic_light_text_displays_;
+  std::unordered_map<lanelet::Id, std::unique_ptr<common::TextObject>> traffic_light_text_displays_;
 
   // Shape visualization
   std::unordered_map<lanelet::Id, std::unique_ptr<rviz_rendering::Shape>>

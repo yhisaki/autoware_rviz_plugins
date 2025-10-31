@@ -29,7 +29,7 @@ PredictedObjectsDisplay::PredictedObjectsDisplay() : ObjectPolygonDisplayBase("t
   max_num_threads = 1;  // hard code the number of threads to be created
 
   for (int ii = 0; ii < max_num_threads; ++ii) {
-    threads.emplace_back(std::thread(&PredictedObjectsDisplay::workerThread, this));
+    threads.emplace_back(&PredictedObjectsDisplay::workerThread, this);
   }
 }
 
@@ -39,7 +39,7 @@ void PredictedObjectsDisplay::workerThread()
     std::function<void()> job;
     {
       std::unique_lock<std::mutex> lock(queue_mutex);
-      condition.wait(lock, [this] { return !jobs.empty() || should_terminate; });
+      condition_.wait(lock, [this] { return !jobs.empty() || should_terminate; });
       if (should_terminate) {
         return;
       }
@@ -53,17 +53,17 @@ void PredictedObjectsDisplay::workerThread()
 void PredictedObjectsDisplay::messageProcessorThreadJob()
 {
   // Receiving
-  std::unique_lock<std::mutex> lock(mutex);
-  auto tmp_msg = this->msg;
-  this->msg.reset();
+  std::unique_lock<std::mutex> lock(mutex_);
+  auto tmp_msg = this->msg_;
+  this->msg_.reset();
   lock.unlock();
 
   auto tmp_markers = createMarkers(tmp_msg);
 
   lock.lock();
-  markers = tmp_markers;
+  markers_ = tmp_markers;
 
-  consumed = true;
+  consumed_ = true;
 }
 
 std::vector<visualization_msgs::msg::Marker::SharedPtr> PredictedObjectsDisplay::createMarkers(
@@ -266,32 +266,32 @@ std::vector<visualization_msgs::msg::Marker::SharedPtr> PredictedObjectsDisplay:
 
 void PredictedObjectsDisplay::processMessage(PredictedObjects::ConstSharedPtr msg)
 {
-  std::unique_lock<std::mutex> lock(mutex);
+  std::unique_lock<std::mutex> lock(mutex_);
 
-  this->msg = msg;
+  this->msg_ = msg;
   queueJob(std::bind(&PredictedObjectsDisplay::messageProcessorThreadJob, this));
 }
 
 void PredictedObjectsDisplay::update(float wall_dt, float ros_dt)
 {
-  std::unique_lock<std::mutex> lock(mutex);
+  std::unique_lock<std::mutex> lock(mutex_);
 
-  if (!markers.empty()) {
+  if (!markers_.empty()) {
     std::set new_marker_ids = std::set<rviz_default_plugins::displays::MarkerID>();
-    for (const auto & marker : markers) {
+    for (const auto & marker : markers_) {
       rviz_default_plugins::displays::MarkerID marker_id =
         rviz_default_plugins::displays::MarkerID(marker->ns, marker->id);
       add_marker(marker);
       new_marker_ids.insert(marker_id);
     }
-    for (auto itr = existing_marker_ids.begin(); itr != existing_marker_ids.end(); itr++) {
+    for (auto itr = existing_marker_ids_.begin(); itr != existing_marker_ids_.end(); itr++) {
       if (new_marker_ids.find(*itr) == new_marker_ids.end()) {
         deleteMarker(*itr);
       }
     }
-    existing_marker_ids = new_marker_ids;
+    existing_marker_ids_ = new_marker_ids;
 
-    markers.clear();
+    markers_.clear();
   }
 
   lock.unlock();
